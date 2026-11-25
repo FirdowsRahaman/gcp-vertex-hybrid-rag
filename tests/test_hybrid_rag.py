@@ -20,4 +20,5 @@ def test_query_endpoint_returns_grounded_citations():
     assert resp.status_code == 200
     body = resp.json()
     assert body["citations"][0]["doc_id"] == "sec-10k-02"
+    assert body["backend"] == "local-rrf-fallback"
     assert "GDPR" in body["answer"]

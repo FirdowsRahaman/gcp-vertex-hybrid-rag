@@ -7,10 +7,10 @@ import os
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
-from src.rag.hybrid_retriever import HybridRRFEngine
+from src.rag.vertex_client import VertexHybridRAGClient
 
 app = FastAPI(title="GCP Vertex Hybrid RAG", version="1.0.0")
-retriever = HybridRRFEngine()
+rag_client = VertexHybridRAGClient()
 
 
 class QueryRequest(BaseModel):
@@ -25,10 +25,11 @@ def health() -> dict[str, str]:
 
 @app.post("/v1/query")
 def query_rag(req: QueryRequest) -> dict[str, object]:
-    hits = retriever.search(req.query, top_k=req.top_k)
-    answer = " ".join(hit.text for hit in hits)
+    hits = rag_client.retrieve(req.query, top_k=req.top_k)
+    answer, backend = rag_client.generate_grounded_answer(req.query, hits)
     return {
         "query": req.query,
+        "backend": backend,
         "answer": answer,
         "citations": [{"doc_id": h.doc_id, "source": h.source, "rrf_score": h.rrf_score} for h in hits],
     }
